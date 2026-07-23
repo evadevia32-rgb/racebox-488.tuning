@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RaceBox 488.TUNING - Menu System</title>
+    <style>
+        :root {
+            --bg-casing: #121316;
+            --screen-bg: #000000;
+            --red-border: #d32f2f;
+            --text-white: #ffffff;
+            --text-gray: #aaaaaa;
+            --accent-green: #00ff66;
+            --brand-red: #ff2233;
+        }
+
+        body {
+            background-color: #080808;
+            color: var(--text-white);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            user-select: none;
+        }
+
+        .racebox-device {
+            width: 95%;
+            max-width: 520px;
+            background: linear-gradient(145deg, #1f2229, #0f1013);
+            border-radius: 40px;
+            padding: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border: 2px solid var(--red-border);
+            box-sizing: border-box;
+        }
+
+        .hardware-grid {
+            display: grid;
+            grid-template-columns: 50px 1fr 50px;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .physical-btn {
+            background: radial-gradient(circle, #2c303b 0%, #15171c 100%);
+            border: 1px solid #3a3f4d;
+            color: #fff;
+            height: 55px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 6px 0;
+            text-align: center;
+        }
+        .physical-btn:active { background: #d32f2f; }
+
+        .display-screen {
+            background-color: var(--screen-bg);
+            border: 2px solid #222;
+            border-radius: 12px;
+            padding: 10px;
+            aspect-ratio: 16/11;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-gray);
+            border-bottom: 1px solid #222;
+            padding-bottom: 4px;
+        }
+
+        .menu-page {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-top: 4px;
+        }
+        .menu-page.active {
+            display: flex;
+        }
+
+        /* Mode Drag Elements */
+        .top-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #gCanvas {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 50%;
+        }
+        .speed-section {
+            display: flex;
+            justify-content: flex-end;
+            align-items: baseline;
+            gap: 4px;
+        }
+        .speed-val {
+            font-size: 48px;
+            font-weight: 900;
+            font-family: monospace;
+            line-height: 0.9;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-top: 1px solid #222;
+            padding-top: 4px;
+            gap: 2px;
+        }
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-family: monospace;
+        }
+        .data-label { color: var(--text-gray); }
+
+        /* Mode History & Settings List */
+        .page-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--accent-green);
+            border-bottom: 1px solid #333;
+            padding-bottom: 2px;
+        }
+        .list-view {
+            font-family: monospace;
+            font-size: 11px;
+            max-height: 110px;
+            overflow-y: auto;
+        }
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            border-bottom: 1px solid #111;
+        }
+
+        .bottom-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: var(--text-gray);
+            border-top: 1px solid #222;
+            padding-top: 4px;
+        }
+
+        .watermark-488 {
+            font-family: 'Arial Black', Impact, sans-serif;
+            font-size: 11px;
+            font-weight: 900;
+            color: var(--brand-red);
+            letter-spacing: 1px;
+        }
+
+        .mode-tag {
+            background: #222;
+            color: var(--accent-green);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="racebox-device">
+        <div class="hardware-grid">
+            
+            <!-- Tombol Kiri Fisik -->
+            <div>
+                <div class="physical-btn" onclick="startGPS()">
+                    <span>GPS</span>
+                    <span style="font-size:8px; color:#aaa;">ON/OFF</span>
+                </div>
+                <div class="physical-btn" onclick="prevMenu()">
+                    <span>▲</span>
+                    <span style="font-size:8px; color:#aaa;">PREV</span>
+                </div>
+            </div>
+
+            <!-- Layar Utama RaceBox -->
+            <div class="display-screen">
+                
+                <!-- Status Header -->
+                <div class="status-bar">
+                    <span id="menu-title" class="mode-tag">DRAG METER</span>
+                    <span id="gps-status" style="color: #ff3333;">📡 GPS OFF</span>
+                </div>
+
+                <!-- 1. MENU: DRAG METER -->
+                <div id="page-drag" class="menu-page active">
+                    <div class="top-section">
+                        <canvas id="gCanvas" width="45" height="45"></canvas>
+                        <div class="speed-section">
+                            <div id="speed" class="speed-val">0.0</div>
+                            <span style="font-size: 12px; color: var(--text-gray);">KPH</span>
+                        </div>
+                    </div>
+                    <div class="data-grid">
+                        <div class="data-row"><span class="data-label">0-60 KMH</span><span id="t-60">--</span></div>
+                        <div class="data-row"><span class="data-label">201m</span><span id="t-201">--</span></div>
+                        <div class="data-row"><span class="data-label">0-100 KMH</span><span id="t-100">--</span></div>
+                        <div class="data-row"><span class="data-label">402m</span><span id="t-402">--</span></div>
+                        <div class="data-row" style="grid-column: span 2; margin-top:2px;">
+                            <span class="data-label">TIMER:</span>
+                            <span id="main-timer" style="font-size: 20px; font-weight: bold; color: var(--accent-green);">0.00s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. MENU: LAP TIMER -->
+                <div id="page-lap" class="menu-page">
+                    <div class="speed-section" style="justify-content: center; margin-top: 5px;">
+                        <div id="speed-lap" class="speed-val">0.0</div>
+                        <span style="font-size: 12px; color: var(--text-gray);">KPH</span>
+                    </div>
+                    <div class="data-grid" style="margin-top: 10px;">
+                        <div class="data-row"><span class="data-label">LAST LAP:</span><span id="last-lap">--:--</span></div>
+                        <div class="data-row"><span class="data-label">BEST LAP:</span><span id="best-lap" style="color:var(--accent-green);">--:--</span></div>
+                        <div class="data-row" style="grid-column: span 2; margin-top:6px;">
+                            <span class="data-label">LAP TIME:</span>
+                            <span id="lap-timer" style="font-size: 22px; font-weight: bold; color: var(--accent-green);">00:00.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. MENU: HISTORY (LOGS) -->
+                <div id="page-history" class="menu-page">
+                    <div class="page-title">RIWAYAT CATATAN WAKTU</div>
+                    <div id="history-items" class="list-view">
+                        <!-- History data akan otomatis masuk ke sini -->
+                    </div>
+                </div>
+
+                <!-- 4. MENU: SETTINGS -->
+                <div id="page-settings" class="menu-page">
+                    <div class="page-title">PENGATURAN SYSTEM</div>
+                    <div class="list-view" style="margin-top: 5px;">
+                        <div class="list-item"><span>VOICE ALERT</span><span id="set-voice" style="color:var(--accent-green); cursor:pointer;" onclick="toggleVoice()">ENABLED</span></div>
+                        <div class="list-item"><span>CLEAR LOGS</span><span style="color:var(--brand-red); cursor:pointer;" onclick="clearHistory()">[RESET]</span></div>
+                        <div class="list-item"><span>UNITS</span><span>KM/H</span></div>
+                    </div>
+                </div>
+
+                <!-- Footer Telemetry -->
+                <div class="bottom-bar">
+                    <span class="watermark-488">🏁 488.TUNING</span>
+                    <span>G: <span id="g-force">0.00G</span></span>
+                </div>
+
+            </div>
+
+            <!-- Tombol Kanan Fisik -->
+            <div>
+                <div class="physical-btn" onclick="resetAll()">
+                    <span>RESET</span>
+                    <span style="font-size:8px; color:#aaa;">CLEAR</span>
+                </div>
+                <div class="physical-btn" onclick="nextMenu()">
+                    <span>▼</span>
+                    <span style="font-size:8px; color:#aaa;">NEXT</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let watchId = null;
+        let menus = ["page-drag", "page-lap", "page-history", "page-settings"];
+        let menuNames = ["DRAG METER", "LAP TIMER", "HISTORY LOG", "SETTINGS"];
+        let currentMenuIndex = 0;
+
+        let isRunning = false;
+        let voiceEnabled = true;
+        let startTime = 0;
+        let startCoords = null;
+        let timerInterval = null;
+
+        let time0_60 = null;
+        let time0_100 = null;
+        let time201m = null;
+        let time402m = null;
+
+        // Navigasi Menu
+        function nextMenu() {
+            currentMenuIndex = (currentMenuIndex + 1) % menus.length;
+            updateMenuUI();
+        }
+
+        function prevMenu() {
+            currentMenuIndex = (currentMenuIndex - 1 + menus.length) % menus.length;
+            updateMenuUI();
+        }
+
+        function updateMenuUI() {
+            menus.forEach((id, idx) => {
+                document.getElementById(id).classList.toggle('active', idx === currentMenuIndex);
+            });
+            document.getElementById('menu-title').innerText = menuNames[currentMenuIndex];
+            if (menus[currentMenuIndex] === "page-history") renderHistory();
+        }
+
+        // Voice System
+        function speak(text) {
+            if ('speechSynthesis' in window && voiceEnabled) {
+                let uttr = new SpeechSynthesisUtterance(text);
+                uttr.lang = 'en-US';
+                uttr.rate = 1.1;
+                window.speechSynthesis.speak(uttr);
+            }
+        }
+
+        function toggleVoice() {
+            voiceEnabled = !voiceEnabled;
+            document.getElementById('set-voice').innerText = voiceEnabled ? "ENABLED" : "DISABLED";
+            document.getElementById('set-voice').style.color = voiceEnabled ? "var(--accent-green)" : "var(--brand-red)";
+        }
+
+        // GPS & Accelerometer Handling
+        function startGPS() {
+            const gpsStatus = document.getElementById('gps-status');
+            if ("geolocation" in navigator) {
+                if (window.DeviceMotionEvent) {
+                    window.addEventListener('devicemotion', handleMotion);
+                }
+                watchId = navigator.geolocation.watchPosition(processLocation, handleError, {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000
+                });
+                gpsStatus.innerText = "📡 GPS ACTIVE";
+                gpsStatus.style.color = "#00ff66";
+                speak("GPS Ready");
+            } else {
+                alert("GPS Tidak Didukung.");
+            }
+        }
+
+        function processLocation(pos) {
+            const coords = pos.coords;
+            const speedKmh = coords.speed ? (coords.speed * 3.6) : 0;
+            
+            document.getElementById('speed').innerText = speedKmh.toFixed(1);
+            document.getElementById('speed-lap').innerText = speedKmh.toFixed(1);
+
+            if (menus[currentMenuIndex] === "page-drag") {
+                handleDragMode(speedKmh, coords);
+            }
+        }
+
+        function handleDragMode(speed, coords) {
+            if (speed > 3 && !isRunning && !time402m) {
+                isRunning = true;
+                startTime = Date.now();
+                startCoords = coords;
+                speak("Go!");
+                
+                timerInterval = setInterval(() => {
+                    let elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                    document.getElementById('main-timer').innerText = elapsed + "s";
+                }, 30);
+            }
+
+            if (isRunning) {
+                let currentElapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                let distance = calculateDistance(startCoords.latitude, startCoords.longitude, coords.latitude, coords.longitude);
+
+                if (speed >= 60 && !time0_60) {
+                    time0_60 = currentElapsed;
+                    document.getElementById('t-60').innerText = time0_60 + "s";
+                    speak("Sixty");
+                }
+                if (speed >= 100 && !time0_100) {
+                    time0_100 = currentElapsed;
+                    document.getElementById('t-100').innerText = time0_100 + "s";
+                    speak("One Hundred");
+                }
+                if (distance >= 201 && !time201m) {
+                    time201m = currentElapsed;
+                    document.getElementById('t-201').innerText = time201m + "s";
+                }
+                if (distance >= 402 && !time402m) {
+                    time402m = currentElapsed;
+                    document.getElementById('t-402').innerText = time402m + "s";
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    speak("Finish!");
+                    saveToHistory();
+                }
+            }
+        }
+
+        function saveToHistory() {
+            let record = `0-100: ${time0_100 || '--'}s | 402m: ${time402m || '--'}s`;
+            let history = JSON.parse(localStorage.getItem('488_history') || '[]');
+            history.unshift({ time: new Date().toLocaleTimeString(), data: record });
+            localStorage.setItem('488_history', JSON.stringify(history));
+        }
+
+        function renderHistory() {
+            let history = JSON.parse(localStorage.getItem('488_history') || '[]');
+            let listHtml = '';
+            history.forEach(item => {
+                listHtml += `<div class="list-item"><span>${item.time}</span><span>${item.data}</span></div>`;
+            });
+            document.getElementById('history-items').innerHTML = listHtml || '<div style="color:#666;">Belum ada riwayat.</div>';
+        }
+
+        function clearHistory() {
+            localStorage.removeItem('488_history');
+            renderHistory();
+        }
+
+        // G-Force Ball
+        const canvas = document.getElementById('gCanvas');
+        const ctx = canvas.getContext('2d');
+        drawGPoint(0, 0);
+
+        function handleMotion(event) {
+            let acc = event.accelerationIncludingGravity;
+            if (acc && acc.x !== null) {
+                let gx = (acc.x / 9.8);
+                let gy = (acc.y / 9.8);
+                let gTotal = Math.sqrt(gx * gx + gy * gy);
+                
+                document.getElementById('g-force').innerText = gTotal.toFixed(2) + "G";
+                drawGPoint(gx, gy);
+            }
+        }
+
+        function drawGPoint(x, y) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(22, 22, 18, 0, 2 * Math.PI);
+            ctx.stroke();
+
+            let posX = 22 + (x * 12);
+            let posY = 22 + (y * 12);
+            
+            ctx.fillStyle = '#ff2233';
+            ctx.beginPath();
+            ctx.arc(Math.max(4, Math.min(40, posX)), Math.max(4, Math.min(40, posY)), 3.5, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; 
+            const rad1 = lat1 * Math.PI / 180;
+            const rad2 = lat2 * Math.PI / 180;
+            const dRad = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+
+            const a = Math.sin(dRad / 2) * Math.sin(dRad / 2) +
+                      Math.cos(rad1) * Math.cos(rad2) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function resetAll() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            time0_60 = null;
+            time0_100 = null;
+            time201m = null;
+            time402m = null;
+            document.getElementById('speed').innerText = "0.0";
+            document.getElementById('t-60').innerText = "--";
+            document.getElementById('t-100').innerText = "--";
+            document.getElementById('t-201').innerText = "--";
+            document.getElementById('t-402').innerText = "--";
+            document.getElementById('main-timer').innerText = "0.00s";
+        }
+
+        function handleError(err) { console.warn(err.message); }
+    </script>
+</body>
+</html>
